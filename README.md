@@ -28,6 +28,11 @@ python3 worker.py
 
 Open `http://localhost:8000` to access the mobile UI.
 
+### Docker & Portainer
+A `docker-compose.yml` is provided for easy deployment via Portainer. The image is published to `ghcr.io/bryanwintermute/tickertape`. 
+
+When running in Docker, ensure you map the printer device (e.g. `/dev/usb/lp0`) correctly in the compose file under the `devices:` block.
+
 ### Systemd Deployment
 Example `.service` files for Raspberry Pi deployments are included:
 - `tickertape.service`

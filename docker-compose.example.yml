@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  tickertape:
+    image: ghcr.io/yourusername/tickertape:latest
+    container_name: tickertape
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=UTC # Change to your local timezone (e.g., America/New_York)
+      - PRINTER_DEVICE=/dev/usb/lp0
+      - TICKERTAPE_DB=/data/tickertape.db
+    volumes:
+      - tickertape_data:/data
+    devices:
+      # Map your host's thermal printer device into the container
+      # The format is <host-device-path>:<container-device-path>
+      - /dev/usb/lp0:/dev/usb/lp0
+
+volumes:
+  tickertape_data:

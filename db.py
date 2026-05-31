@@ -5,9 +5,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+import os
+
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("tickertape.db")
+DB_PATH = Path(os.environ.get("TICKERTAPE_DB", "tickertape.db"))
 
 def get_connection() -> sqlite3.Connection:
     """Returns a connection to the SQLite database."""

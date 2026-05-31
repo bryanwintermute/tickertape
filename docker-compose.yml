@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  tickertape:
+    image: ghcr.io/bryanwintermute/tickertape:latest
+    container_name: tickertape
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=America/New_York # Change to your timezone
+      - PRINTER_DEVICE=/dev/rongta-receipt
+      - TICKERTAPE_DB=/data/tickertape.db
+    volumes:
+      - tickertape_data:/data
+    devices:
+      - /dev/usb/lp0:/dev/rongta-receipt # Map your physical printer device here
+
+volumes:
+  tickertape_data:
