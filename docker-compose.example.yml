@@ -7,10 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    environment:
-      - TZ=UTC # Change to your local timezone (e.g., America/New_York)
-      - PRINTER_DEVICE=/dev/usb/lp0
-      - TICKERTAPE_DB=/data/tickertape.db
+    env_file:
+      - .env
     volumes:
       - tickertape_data:/data
     devices:
