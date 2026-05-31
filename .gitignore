@@ -22,9 +22,8 @@ venv.bak/
 *.swp
 *.swo
 
-# Any hidden files or directories should be ignored, as they are likely to be IDE/editor specific.
-.*/
-!.github/
+# Agent session folders
+.agy/
 
 # MacOS
 .DS_Store
