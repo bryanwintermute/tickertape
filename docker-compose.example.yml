@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   tickertape:
+    build: .
     image: ghcr.io/yourusername/tickertape:latest
     container_name: tickertape
     restart: unless-stopped
