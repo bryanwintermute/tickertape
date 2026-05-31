@@ -24,6 +24,7 @@ venv.bak/
 
 # Any hidden files or directories should be ignored, as they are likely to be IDE/editor specific.
 .*/
+!.github/
 
 # MacOS
 .DS_Store
