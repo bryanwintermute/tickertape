@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tickertape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Tickertape</h1>
+            <p class="subtitle">Print to the physical inbox</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="echo">Echo</button>
+            <button class="tab-btn" data-tab="list">List</button>
+            <button class="tab-btn" data-tab="inbox">Inbox</button>
+            <button class="tab-btn" data-tab="history">History</button>
+        </nav>
+
+        <main>
+            <!-- Echo Panel -->
+            <section id="echo-panel" class="panel active">
+                <form id="echo-form">
+                    <div class="input-group">
+                        <label for="echo-title">Title (Optional)</label>
+                        <input type="text" id="echo-title" placeholder="A brief title...">
+                    </div>
+                    <div class="input-group">
+                        <label for="echo-text">Message</label>
+                        <textarea id="echo-text" rows="4" placeholder="What's on your mind?..." required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="checkbox-label"><input type="checkbox" id="echo-save" checked> Save to history</label>
+                    </div>
+                    <button type="submit" class="primary-btn">Print Note</button>
+                </form>
+            </section>
+
+            <!-- List Panel -->
+            <section id="list-panel" class="panel">
+                <form id="list-form">
+                    <div class="input-group">
+                        <label for="list-title">List Title</label>
+                        <input type="text" id="list-title" placeholder="e.g. Groceries" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Style</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="list-style" value="checkbox" checked> Checkboxes</label>
+                            <label><input type="radio" name="list-style" value="bullet"> Bullets</label>
+                            <label><input type="radio" name="list-style" value="numbered"> Numbered</label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Items (one per line)</label>
+                        <textarea id="list-items" rows="6" placeholder="Milk&#10;Eggs&#10;Bread" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="checkbox-label"><input type="checkbox" id="list-save" checked> Save to history</label>
+                    </div>
+                    <button type="submit" class="primary-btn">Print List</button>
+                </form>
+            </section>
+
+            <!-- Inbox Panel -->
+            <section id="inbox-panel" class="panel">
+                <div class="inbox-header">
+                    <h2>Pending Reminders</h2>
+                    <button id="refresh-inbox" class="icon-btn" aria-label="Refresh">↻</button>
+                </div>
+                <div id="inbox-list" class="inbox-list">
+                    <p class="empty-state">Loading...</p>
+                </div>
+            </section>
+
+            <!-- History Panel -->
+            <section id="history-panel" class="panel">
+                <div class="inbox-header">
+                    <h2>Print History</h2>
+                    <button id="refresh-history" class="icon-btn" aria-label="Refresh">↻</button>
+                </div>
+                <div id="history-list" class="inbox-list">
+                    <p class="empty-state">Loading...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">Job queued successfully!</div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

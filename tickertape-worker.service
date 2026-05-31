@@ -1,0 +1,16 @@
+[Unit]
+Description=Tickertape Print Worker
+After=network.target tickertape.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/github/tickertape
+ExecStart=/usr/bin/python3 worker.py
+Restart=on-failure
+RestartSec=5
+# Configure the path to the thermal printer character device
+Environment="PRINTER_DEVICE=/dev/rongta-receipt"
+
+[Install]
+WantedBy=multi-user.target
