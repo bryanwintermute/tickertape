@@ -33,17 +33,17 @@ def init_db():
         )
     """)
     
-    # We might need to add the attempts column if the DB already exists
-    try:
-        conn.execute("ALTER TABLE queue ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
-    except Exception:
-        pass # Column likely already exists
-    try:
-        conn.execute("ALTER TABLE queue ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    except Exception:
-        pass # Column likely already exists
-        
-    conn.commit()
+        # We might need to add the attempts column if the DB already exists
+        try:
+            conn.execute("ALTER TABLE queue ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
+        except Exception:
+            pass # Column likely already exists
+        try:
+            conn.execute("ALTER TABLE queue ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        except Exception:
+            pass # Column likely already exists
+            
+        conn.commit()
 
 def enqueue_job(idempotency_key: str, job_type: str, payload: Dict[str, Any]) -> int:
     """
