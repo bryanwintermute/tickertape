@@ -77,10 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Form Handlers ---
+    // --- Forms ---
+    // Echo
     document.getElementById('echo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = e.target.querySelector('button');
+        
+        const btn = e.target.querySelector('button[type="submit"]');
         const ogText = btn.textContent;
         btn.textContent = 'Sending...';
         btn.disabled = true;
@@ -101,6 +103,30 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = false;
     });
 
+    document.getElementById('echo-inbox-btn').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const ogText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
+        const payload = {
+            type: 'echo',
+            title: document.getElementById('echo-title').value,
+            text: document.getElementById('echo-text').value,
+            send_to_inbox: true
+        };
+
+        const success = await submitJob(payload);
+        if (success) {
+            document.getElementById('echo-form').reset();
+            showToast('Saved to Inbox!');
+        }
+        
+        btn.textContent = ogText;
+        btn.disabled = false;
+    });
+
+    // List
     document.getElementById('list-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
@@ -122,6 +148,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const success = await submitJob(payload);
         if (success) {
             e.target.reset();
+        }
+        
+        btn.textContent = ogText;
+        btn.disabled = false;
+    });
+
+    document.getElementById('list-inbox-btn').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const ogText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
+        const rawItems = document.getElementById('list-items').value.split('\n');
+        const items = rawItems.map(i => i.trim()).filter(i => i.length > 0);
+
+        const payload = {
+            type: 'list',
+            title: document.getElementById('list-title').value,
+            style: document.querySelector('input[name="list-style"]:checked').value,
+            items: items,
+            send_to_inbox: true
+        };
+
+        const success = await submitJob(payload);
+        if (success) {
+            document.getElementById('list-form').reset();
+            showToast('Saved to Inbox!');
         }
         
         btn.textContent = ogText;

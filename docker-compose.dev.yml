@@ -1,7 +1,7 @@
 services:
   tickertape:
     build: .
-x    container_name: tickertape
+    container_name: tickertape
     restart: unless-stopped
     ports:
       - "8000:8000"

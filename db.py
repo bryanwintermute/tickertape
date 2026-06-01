@@ -38,7 +38,8 @@ def enqueue_job(idempotency_key: str, job_type: str, payload: Dict[str, Any]) ->
     Returns the job ID, or the existing job ID if the idempotency_key already exists.
     """
     payload_str = json.dumps(payload)
-    status = 'inbox' if job_type == 'reminder' else 'pending'
+    send_to_inbox = payload.get('send_to_inbox', False)
+    status = 'inbox' if (job_type == 'reminder' or send_to_inbox) else 'pending'
     
     with get_connection() as conn:
         try:
@@ -82,15 +83,16 @@ def mark_job_status(job_id: int, status: str):
         conn.commit()
 
 def list_reminders() -> List[Dict[str, Any]]:
-    """Returns a list of all active reminders (status = 'inbox')."""
+    """Returns a list of all active items (status = 'inbox')."""
     with get_connection() as conn:
         cursor = conn.execute(
-            "SELECT id, payload, status, created_at FROM queue WHERE type = 'reminder' AND status = 'inbox' ORDER BY created_at DESC"
+            "SELECT id, type, payload, status, created_at FROM queue WHERE status = 'inbox' ORDER BY created_at DESC"
         )
         reminders = []
         for row in cursor:
             reminders.append({
                 "id": row["id"],
+                "type": row["type"],
                 "payload": json.loads(row["payload"]),
                 "status": row["status"],
                 "created_at": row["created_at"]
