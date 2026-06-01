@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from db import init_db, get_next_pending_job, mark_job_status
+from db import init_db, get_next_pending_job, mark_job_status, requeue_job
 from _vendored.receipt_print import Receipt
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -76,7 +76,14 @@ def process_job(job: dict):
         mark_job_status(job['id'], 'failed')
     except Exception as e:
         logger.error(f"Failed to print job {job['id']}: {e}")
-        mark_job_status(job['id'], 'failed')
+        attempts = job.get('attempts', 0) + 1
+        if attempts < 3:
+            logger.info(f"Requeueing job {job['id']} (attempt {attempts} of 3)")
+            requeue_job(job['id'], attempts)
+            time.sleep(1) # Small backoff
+        else:
+            logger.error(f"Job {job['id']} failed after 3 attempts. Giving up.")
+            mark_job_status(job['id'], 'failed')
 
 def run_worker():
     init_db()

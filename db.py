@@ -23,14 +23,27 @@ def init_db():
         conn.execute("""
             CREATE TABLE IF NOT EXISTS queue (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                idempotency_key TEXT UNIQUE,
-                type TEXT NOT NULL,
-                payload TEXT NOT NULL,
-                status TEXT NOT NULL DEFAULT 'pending',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        conn.commit()
+            idempotency_key TEXT UNIQUE NOT NULL,
+            type TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            attempts INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # We might need to add the attempts column if the DB already exists
+    try:
+        conn.execute("ALTER TABLE queue ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass # Column likely already exists
+    try:
+        conn.execute("ALTER TABLE queue ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    except Exception:
+        pass # Column likely already exists
+        
+    conn.commit()
 
 def enqueue_job(idempotency_key: str, job_type: str, payload: Dict[str, Any]) -> int:
     """
@@ -58,27 +71,43 @@ def enqueue_job(idempotency_key: str, job_type: str, payload: Dict[str, Any]) ->
             return cursor.fetchone()['id']
 
 def get_next_pending_job() -> Optional[Dict[str, Any]]:
-    """Returns the oldest pending job, or None if the queue is empty."""
+    """Returns the oldest pending job and atomically marks it as 'processing', or None if empty."""
     with get_connection() as conn:
         cursor = conn.execute(
-            "SELECT id, type, payload FROM queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1"
+            "SELECT id, type, payload, attempts FROM queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1"
         )
         row = cursor.fetchone()
-        if not row:
-            return None
-            
-        return {
-            "id": row["id"],
-            "type": row["type"],
-            "payload": json.loads(row["payload"])
-        }
+        if row:
+            # Atomic claim
+            update_cursor = conn.execute(
+                "UPDATE queue SET status = 'processing', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'pending'",
+                (row["id"],)
+            )
+            if update_cursor.rowcount == 1:
+                conn.commit()
+                return {
+                    "id": row["id"],
+                    "type": row["type"],
+                    "payload": json.loads(row["payload"]),
+                    "attempts": row["attempts"]
+                }
+        return None
 
 def mark_job_status(job_id: int, status: str):
     """Updates the status of a job (e.g. 'printed' or 'failed')."""
     with get_connection() as conn:
         conn.execute(
-            "UPDATE queue SET status = ? WHERE id = ?",
+            "UPDATE queue SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             (status, job_id)
+        )
+        conn.commit()
+
+def requeue_job(job_id: int, attempts: int):
+    """Increments attempts and sets a job back to 'pending'."""
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE queue SET status = 'pending', attempts = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (attempts, job_id)
         )
         conn.commit()
 

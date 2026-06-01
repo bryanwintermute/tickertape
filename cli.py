@@ -27,12 +27,16 @@ def main():
     echo_parser = subparsers.add_parser("echo", help="Print a simple text note")
     echo_parser.add_argument("text", nargs="?", help="Text to print (or read from stdin)")
     echo_parser.add_argument("-t", "--title", help="Optional title")
+    echo_parser.add_argument('--no-save', action='store_false', dest='save_to_history', default=True, help="Do not save to history")
+    echo_parser.add_argument('--save', action='store_true', dest='save_to_history', help="Save to history (default)")
 
     # Print List Command
     list_parser = subparsers.add_parser("list", help="Print a structured list")
     list_parser.add_argument("items", nargs="*", help="List items")
     list_parser.add_argument("-t", "--title", required=True, help="List title")
     list_parser.add_argument("-s", "--style", choices=["bullet", "checkbox", "numbered"], default="checkbox", help="List style")
+    list_parser.add_argument('--no-save', action='store_false', dest='save_to_history', default=True, help="Do not save to history")
+    list_parser.add_argument('--save', action='store_true', dest='save_to_history', help="Save to history (default)")
 
     args = parser.parse_args()
     config = load_config()
@@ -40,7 +44,8 @@ def main():
     api_endpoint = f"{server_url}/api/print"
 
     payload = {
-        "idempotency_key": str(uuid.uuid4())
+        "idempotency_key": str(uuid.uuid4()),
+        "save_to_history": args.save_to_history
     }
 
     if args.command == "echo":
