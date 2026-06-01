@@ -10,33 +10,44 @@ Built on top of [`unspooled`](https://github.com/bryanwintermute/unspooled).
 - **CLI (`cli.py`)**: A simple Python wrapper around curl/urllib to push jobs to the server from a laptop or cron job.
 
 ## Setup
-### Dependencies
-- Python 3.9+
-- A thermal printer available as a character device (e.g. `/dev/usb/lp0` or `/dev/rongta-receipt`)
+
+The easiest way to run the project (both the web UI/API and the print worker) is using Docker Compose.
+
+### Running Locally with Docker (Recommended)
+
+To run the application locally for development or testing:
+
+1. Connect your Rongta RP332 printer via USB. Ensure it appears as `/dev/usb/lp0`.
+2. Build and start the services using the development compose file:
+   ```bash
+   docker compose -f docker-compose.dev.yml up --build
+   ```
+3. Open `http://localhost:8000` in your browser.
+
+If you don't have a printer connected, the worker will safely swallow the `PermissionError` or `FileNotFoundError` and you can still test the UI.
+
+### Manual Setup (Without Docker)
+
+If you prefer to run it manually with Python 3.11+:
+
+1. Create a virtual environment and install dependencies (though there are no external dependencies right now!):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Start the API & Web Server (runs on port 8000):
+   ```bash
+   python server.py
+   ```
+
+3. In a separate terminal, start the Worker process:
+   ```bash
+   python worker.py
+   ```
 
 ### Configuration
-You can configure the path to the printer by setting the `PRINTER_DEVICE` environment variable. It defaults to `/dev/rongta-receipt`.
-
-### Running Locally
-```bash
-# Start the web server (listens on port 8000)
-python3 server.py
-
-# In another terminal, start the worker
-python3 worker.py
-```
-
-Open `http://localhost:8000` to access the mobile UI.
-
-### Docker & Portainer
-A `docker-compose.yml` is provided for easy deployment via Portainer (it pulls the latest image from GHCR). 
-
-If you are developing locally and want to build the Docker image from your local code, use the dev compose file:
-```bash
-docker compose -f docker-compose.dev.yml up --build
-```
-
-When running in Docker, ensure you map the printer device (e.g. `/dev/usb/lp0`) correctly in the compose file under the `devices:` block.
+You can configure the path to the printer by setting the `PRINTER_DEVICE` environment variable. It defaults to `/dev/rongta-receipt`. When running in Docker, ensure you map the printer device (e.g. `/dev/usb/lp0`) correctly in the compose file under the `devices:` block.
 
 ### Systemd Deployment
 Example `.service` files for Raspberry Pi deployments are included:
