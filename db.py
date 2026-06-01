@@ -33,15 +33,17 @@ def init_db():
         )
     """)
     
-        # We might need to add the attempts column if the DB already exists
+        # We might need to add the columns if the DB already exists
         try:
             conn.execute("ALTER TABLE queue ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
-        except Exception:
-            pass # Column likely already exists
+        except Exception as e:
+            if "duplicate column name" not in str(e):
+                raise
         try:
-            conn.execute("ALTER TABLE queue ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-        except Exception:
-            pass # Column likely already exists
+            conn.execute("ALTER TABLE queue ADD COLUMN updated_at TIMESTAMP")
+        except Exception as e:
+            if "duplicate column name" not in str(e):
+                raise
             
         conn.commit()
 
