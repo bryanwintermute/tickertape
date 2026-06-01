@@ -1,11 +1,12 @@
 import pytest
 import os
+import db
 from db import init_db, enqueue_job, get_next_pending_job, list_reminders, mark_job_status, get_connection
 
 @pytest.fixture(autouse=True)
-def setup_test_db(monkeypatch, tmp_path):
+def setup_test_db(tmp_path):
     db_file = tmp_path / "test.db"
-    monkeypatch.setenv("TICKERTAPE_DB", str(db_file))
+    db.DB_PATH = db_file
     init_db()
     
 def test_idempotency_returns_same_id():
