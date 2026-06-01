@@ -38,11 +38,13 @@ def enqueue_job(idempotency_key: str, job_type: str, payload: Dict[str, Any]) ->
     Returns the job ID, or the existing job ID if the idempotency_key already exists.
     """
     payload_str = json.dumps(payload)
+    status = 'inbox' if job_type == 'reminder' else 'pending'
+    
     with get_connection() as conn:
         try:
             cursor = conn.execute(
-                "INSERT INTO queue (idempotency_key, type, payload, status) VALUES (?, ?, ?, 'pending')",
-                (idempotency_key, job_type, payload_str)
+                "INSERT INTO queue (idempotency_key, type, payload, status) VALUES (?, ?, ?, ?)",
+                (idempotency_key, job_type, payload_str, status)
             )
             conn.commit()
             return cursor.lastrowid
@@ -80,10 +82,10 @@ def mark_job_status(job_id: int, status: str):
         conn.commit()
 
 def list_reminders() -> List[Dict[str, Any]]:
-    """Returns a list of all active reminders (pending or otherwise)."""
+    """Returns a list of all active reminders (status = 'inbox')."""
     with get_connection() as conn:
         cursor = conn.execute(
-            "SELECT id, payload, status, created_at FROM queue WHERE type = 'reminder' ORDER BY created_at DESC"
+            "SELECT id, payload, status, created_at FROM queue WHERE type = 'reminder' AND status = 'inbox' ORDER BY created_at DESC"
         )
         reminders = []
         for row in cursor:

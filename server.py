@@ -5,7 +5,7 @@ import logging
 import uuid
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-from db import init_db, enqueue_job, list_reminders, list_history
+from db import init_db, enqueue_job, list_reminders, list_history, mark_job_status
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,6 +22,8 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
         
         if parsed_path.path == '/api/print':
             self._handle_print_job()
+        elif parsed_path.path == '/api/release_reminder':
+            self._handle_release_reminder()
         else:
             self.send_response(404)
             self.end_headers()
@@ -67,6 +69,29 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
             logger.info(f"Queued {job_type} job (ID: {job_id})")
         except Exception as e:
             logger.error(f"Failed to enqueue job: {e}")
+            self._send_error(500, "Internal Server Error")
+
+    def _handle_release_reminder(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length)
+        
+        try:
+            payload = json.loads(post_data.decode('utf-8'))
+            job_id = payload.get('id')
+            if not job_id:
+                self._send_error(400, "Missing job id")
+                return
+                
+            mark_job_status(job_id, 'pending')
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "id": job_id}).encode())
+        except json.JSONDecodeError:
+            self._send_error(400, "Invalid JSON")
+        except Exception as e:
+            logger.error(f"Failed to release reminder: {e}")
             self._send_error(500, "Internal Server Error")
 
     def _handle_get_inbox(self):

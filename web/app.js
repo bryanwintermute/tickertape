@@ -149,13 +149,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 const div = document.createElement('div');
                 div.className = 'inbox-item';
                 
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                
                 const title = reminder.payload.title || 'Untitled Reminder';
                 const date = new Date(reminder.created_at).toLocaleString();
                 
-                div.innerHTML = `
+                const infoDiv = document.createElement('div');
+                infoDiv.innerHTML = `
                     <div class="inbox-item-title">${title} (${reminder.status})</div>
                     <div class="inbox-item-meta">Added: ${date}</div>
                 `;
+                
+                const btnDiv = document.createElement('div');
+                const printBtn = document.createElement('button');
+                printBtn.textContent = 'Print Now';
+                printBtn.className = 'primary-btn';
+                printBtn.style.padding = '8px 16px';
+                printBtn.style.fontSize = '0.9rem';
+                printBtn.style.marginTop = '0';
+                printBtn.onclick = async () => {
+                    const ogText = printBtn.textContent;
+                    printBtn.textContent = '...';
+                    printBtn.disabled = true;
+                    try {
+                        const res = await fetch('/api/release_reminder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: reminder.id })
+                        });
+                        if (res.ok) {
+                            loadInbox();
+                        } else {
+                            throw new Error("Failed");
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        printBtn.textContent = 'Error';
+                    }
+                };
+                
+                btnDiv.appendChild(printBtn);
+                div.appendChild(infoDiv);
+                div.appendChild(btnDiv);
                 inboxList.appendChild(div);
             });
             
