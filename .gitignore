@@ -24,6 +24,7 @@ venv.bak/
 
 # Agent session folders
 .agy/
+.antigravitycli/
 
 # MacOS
 .DS_Store

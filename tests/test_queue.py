@@ -3,8 +3,9 @@ import os
 from db import init_db, enqueue_job, get_next_pending_job, list_reminders, mark_job_status, get_connection
 
 @pytest.fixture(autouse=True)
-def setup_test_db(monkeypatch):
-    monkeypatch.setenv("TICKERTAPE_DB", ":memory:")
+def setup_test_db(monkeypatch, tmp_path):
+    db_file = tmp_path / "test.db"
+    monkeypatch.setenv("TICKERTAPE_DB", str(db_file))
     init_db()
     
 def test_idempotency_returns_same_id():

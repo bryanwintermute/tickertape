@@ -23,15 +23,15 @@ def init_db():
         conn.execute("""
             CREATE TABLE IF NOT EXISTS queue (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-            idempotency_key TEXT UNIQUE NOT NULL,
-            type TEXT NOT NULL,
-            payload TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            attempts INTEGER NOT NULL DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+                idempotency_key TEXT UNIQUE NOT NULL,
+                type TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                attempts INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
     
         # We might need to add the columns if the DB already exists
         try:
@@ -110,6 +110,14 @@ def requeue_job(job_id: int, attempts: int):
         conn.execute(
             "UPDATE queue SET status = 'pending', attempts = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             (attempts, job_id)
+        )
+        conn.commit()
+
+def recover_crashed_jobs():
+    """Sweeps any jobs stuck in 'processing' back to 'pending'. Call on worker startup."""
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE queue SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE status = 'processing'"
         )
         conn.commit()
 

@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from db import init_db, get_next_pending_job, mark_job_status, requeue_job
+from db import init_db, get_next_pending_job, mark_job_status, requeue_job, recover_crashed_jobs
 from _vendored.receipt_print import Receipt
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,8 +32,6 @@ def process_job(job: dict):
     payload = job['payload']
     
     try:
-        save = payload.get('save_to_history', True)
-        
         # Build the receipt
         title = sanitize_text(payload.get('title'))
         style = payload.get('style', 'checkbox')
@@ -87,6 +85,7 @@ def process_job(job: dict):
 
 def run_worker():
     init_db()
+    recover_crashed_jobs()
     logger.info(f"Worker started. Polling for jobs. Printer set to {PRINTER_DEVICE}")
 
     while True:
