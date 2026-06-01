@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tickertape</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="fonts/outfit.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -77,8 +78,10 @@
             <!-- Inbox Panel -->
             <section id="inbox-panel" class="panel">
                 <div class="inbox-header">
-                    <h2>Pending Reminders</h2>
-                    <button id="refresh-inbox" class="icon-btn" aria-label="Refresh">↻</button>
+                    <h2>Inbox</h2>
+                    <button id="refresh-inbox" class="icon-btn" aria-label="Refresh">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                    </button>
                 </div>
                 <div id="inbox-list" class="inbox-list">
                     <p class="empty-state">Loading...</p>
@@ -88,8 +91,10 @@
             <!-- History Panel -->
             <section id="history-panel" class="panel">
                 <div class="inbox-header">
-                    <h2>Print History</h2>
-                    <button id="refresh-history" class="icon-btn" aria-label="Refresh">↻</button>
+                    <h2>History</h2>
+                    <button id="refresh-history" class="icon-btn" aria-label="Refresh">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                    </button>
                 </div>
                 <div id="history-list" class="inbox-list">
                     <p class="empty-state">Loading...</p>
