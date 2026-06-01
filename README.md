@@ -29,7 +29,12 @@ python3 worker.py
 Open `http://localhost:8000` to access the mobile UI.
 
 ### Docker & Portainer
-A `docker-compose.yml` is provided for easy deployment via Portainer. The image is published to `ghcr.io/bryanwintermute/tickertape`. 
+A `docker-compose.yml` is provided for easy deployment via Portainer (it pulls the latest image from GHCR). 
+
+If you are developing locally and want to build the Docker image from your local code, use the dev compose file:
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
 
 When running in Docker, ensure you map the printer device (e.g. `/dev/usb/lp0`) correctly in the compose file under the `devices:` block.
 

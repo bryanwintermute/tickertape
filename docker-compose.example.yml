@@ -12,7 +12,7 @@ services:
     devices:
       # Map your host's thermal printer device into the container
       # The format is <host-device-path>:<container-device-path>
-      - /dev/usb/lp0:/dev/usb/lp0
+      - /dev/usb/lp0:/dev/rongta-receipt # Map your physical printer device here
 
 volumes:
   tickertape_data:
