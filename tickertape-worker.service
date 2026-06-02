@@ -4,8 +4,8 @@ After=network.target tickertape.service
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/github/tickertape
+User=bryan
+WorkingDirectory=/home/bryan/github/tickertape
 ExecStart=/usr/bin/python3 worker.py
 Restart=on-failure
 RestartSec=5
