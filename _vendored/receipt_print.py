@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # Vendored from https://github.com/bryanwintermute/unspooled
-# at v0.3.0 (with fractions). DO NOT EDIT locally; refresh by
+# at v0.3.1 (commit 42db0ba). DO NOT EDIT locally; refresh by
 # re-vendoring from upstream.
-
 """Stdlib-only ESC/POS renderer for 80mm and 58mm thermal receipt printers.
 
 Designed to be:
@@ -52,6 +51,7 @@ References for the command set used here:
 from __future__ import annotations
 
 import argparse
+import re as _re
 import sys
 import textwrap
 import time
@@ -144,6 +144,14 @@ DEFAULT_SANITIZE_MAP: dict[str, str] = {
 }
 
 
+# Detects an ASCII digit immediately followed by a Unicode fraction
+# character. Used by sanitize() to enforce the mixed-number spacing
+# convention. Range covers Latin-1 (\u00BC-\u00BE) + the Number Forms
+# block (\u2150-\u215E), so the regex stays valid as the sanitize map
+# is extended with more fractions.
+_RE_DIGIT_FRACTION = _re.compile(r"(\d)([\u00BC-\u00BE\u2150-\u215E])")
+
+
 def sanitize(
     s: str,
     extra: Mapping[str, str] | None = None,
@@ -151,6 +159,13 @@ def sanitize(
     """Normalize a string for safe CP437 encoding.
 
     Pipeline:
+      0. Mixed-number spacing: insert a space between an ASCII digit
+         and an adjacent Unicode fraction (`\u00BC-\u00BE` Latin-1 +
+         the `\u2150-\u215E` Number Forms block), so the standard
+         mixed-number form `1\u00BC` renders as `1 1/4` after step 1's
+         translate, not the visually-wrong `11/4`. Without this pass,
+         the recipe convention "1\u00BC cups" would silently degrade
+         to "11/4 cups" — five-quarters becomes eleven-quarters.
       1. Translate via the merged map (DEFAULT_SANITIZE_MAP + extra).
          This pass catches chars whose NFKD decomposition would
          otherwise lose information — `\u00B5` (micro-sign) NFKD-decomposes
@@ -176,6 +191,7 @@ def sanitize(
 
     This function is idempotent: sanitize(sanitize(x)) == sanitize(x).
     """
+    s = _RE_DIGIT_FRACTION.sub(r"\1 \2", s)
     table = str.maketrans(
         DEFAULT_SANITIZE_MAP if extra is None else {**DEFAULT_SANITIZE_MAP, **extra}
     )
@@ -331,8 +347,6 @@ class Receipt:
 # Deliberately out of scope (v1): tables, code blocks, images, links
 # (the printer can't follow them), nested lists, blockquotes.
 # ---------------------------------------------------------------------------
-
-import re as _re
 
 _RE_HEADING = _re.compile(r"^(#{1,3})\s+(.+?)\s*$")
 _RE_HR = _re.compile(r"^(?:-{3,}|\*{3,}|_{3,})\s*$")
