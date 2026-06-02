@@ -58,17 +58,17 @@ def process_job(job: dict):
         
     except PermissionError:
         logger.error(f"Permission denied to write to {PRINTER_DEVICE}. Check udev rules.")
-        mark_job_status(job['id'], 'failed')
+        mark_job_status(job['id'], 'failed_retriable')
     except Exception as e:
         logger.error(f"Failed to print job {job['id']}: {e}")
         attempts = job.get('attempts', 0) + 1
-        if attempts < 3:
-            logger.info(f"Requeueing job {job['id']} (attempt {attempts} of 3)")
+        if attempts < 5:
+            logger.info(f"Requeueing job {job['id']} (attempt {attempts} of 5)")
             requeue_job(job['id'], attempts)
-            time.sleep(1) # Small backoff
+            time.sleep(2 ** attempts) # Exponential backoff
         else:
-            logger.error(f"Job {job['id']} failed after 3 attempts. Giving up.")
-            mark_job_status(job['id'], 'failed')
+            logger.error(f"Job {job['id']} failed after 5 attempts. Marking failed_retriable.")
+            mark_job_status(job['id'], 'failed_retriable')
 
 def run_worker():
     init_db()

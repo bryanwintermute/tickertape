@@ -114,10 +114,10 @@ def requeue_job(job_id: int, attempts: int):
         conn.commit()
 
 def recover_crashed_jobs():
-    """Sweeps any jobs stuck in 'processing' back to 'pending'. Call on worker startup."""
+    """Sweeps jobs stuck in 'processing' or 'failed_retriable' back to 'pending'. Call on worker startup."""
     with get_connection() as conn:
         conn.execute(
-            "UPDATE queue SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE status = 'processing'"
+            "UPDATE queue SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE status IN ('processing', 'failed_retriable')"
         )
         conn.commit()
 
@@ -139,16 +139,17 @@ def list_reminders() -> List[Dict[str, Any]]:
         return reminders
 
 def list_history() -> List[Dict[str, Any]]:
-    """Returns a list of all jobs marked as 'printed'."""
+    """Returns a list of all jobs marked as printed, failed, or failed_retriable."""
     with get_connection() as conn:
         cursor = conn.execute(
-            "SELECT id, type, payload, created_at FROM queue WHERE status = 'printed' ORDER BY created_at DESC LIMIT 50"
+            "SELECT id, type, status, payload, created_at FROM queue WHERE status IN ('printed', 'failed', 'failed_retriable') ORDER BY created_at DESC LIMIT 50"
         )
         history = []
         for row in cursor:
             history.append({
                 "id": row["id"],
                 "type": row["type"],
+                "status": row["status"],
                 "payload": json.loads(row["payload"]),
                 "created_at": row["created_at"]
             })

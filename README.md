@@ -54,4 +54,13 @@ Example `.service` files for Raspberry Pi deployments are included:
 - `tickertape.service`
 - `tickertape-worker.service`
 
-Copy these to `/etc/systemd/system/` and enable them.
+1. `sudo cp tickertape*.service /etc/systemd/system/`
+2. `sudo systemctl daemon-reload`
+3. `sudo systemctl enable --now tickertape.service tickertape-worker.service`
+
+**Deploying to a Dedicated Host (Quick Path):**
+1. Ensure the remote host has the proper printer setup (udev rules).
+2. Sync the repository over (e.g., `rsync -avz --exclude '.git' ~/github/tickertape user@host:~/github/`).
+3. SSH into the host and run the `cp`, `daemon-reload`, and `enable --now` steps above.
+
+### License

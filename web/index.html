@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tickertape</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="fonts/outfit.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -62,7 +64,13 @@
                     </div>
 
                     <div class="input-group">
-                        <label>Items (one per line)</label>
+                        <label>Items (one per line)
+                            <select id="list-template-select" style="float: right; font-size: 0.8em; padding: 2px; border-radius: 4px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color);">
+                                <option value="">-- Load Template --</option>
+                                <option value="shopping">Shopping List</option>
+                                <option value="morning">Morning Routine</option>
+                            </select>
+                        </label>
                         <textarea id="list-items" rows="6" placeholder="Milk&#10;Eggs&#10;Bread" required></textarea>
                     </div>
                     <div class="input-group">
