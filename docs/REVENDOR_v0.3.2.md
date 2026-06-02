@@ -1,15 +1,17 @@
-# Re-vendor unspooled v0.3.1
+# Re-vendor unspooled v0.3.2
 
 **Date:** 2026-06-02
-**Reason:** Upstream patch fix for the fraction-spacing bug in v0.3.0.
+**Reason:** Upstream patch fix for the fraction-spacing bug in v0.3.0,
+plus a Python 3.9 compat fix that landed between v0.3.1 and v0.3.2
+(see note below).
 **Estimated work:** ~10 minutes including verification.
 
 ## What changed upstream
 
-`unspooled` v0.3.1 ([release notes](https://github.com/bryanwintermute/unspooled/releases/tag/v0.3.1))
+`unspooled` v0.3.2 ([release notes](https://github.com/bryanwintermute/unspooled/releases/tag/v0.3.2))
 fixes `sanitize()` so the mixed-number convention works correctly:
 
-| Input | v0.3.0 (current) | v0.3.1 (target) |
+| Input | v0.3.0 (current) | v0.3.2 (target) |
 |---|---|---|
 | `"1¼ cups"` | `"11/4 cups"` ❌ | `"1 1/4 cups"` ✅ |
 | `"10½ oz"` | `"101/2 oz"` ❌ | `"10 1/2 oz"` ✅ |
@@ -41,7 +43,7 @@ cp ~/github/unspooled/receipt_print.py _vendored/receipt_print.py
 #
 #      #!/usr/bin/env python3
 #      # Vendored from https://github.com/bryanwintermute/unspooled
-#      # at v0.3.1 (commit 42db0ba). DO NOT EDIT locally; refresh by
+#      # at v0.3.2 (commit 07b74f2). DO NOT EDIT locally; refresh by
 #      # re-vendoring from upstream.
 #
 #    Then drop the upstream shebang line that follows so the file
@@ -53,7 +55,7 @@ from _vendored.receipt_print import sanitize
 assert sanitize('1\u00BC cups') == '1 1/4 cups', f'fix not applied: got {sanitize(chr(0x31)+chr(0xBC)+chr(0x20)+\"cups\")!r}'
 assert sanitize('\u00BD off') == '1/2 off', 'standalone fraction regressed'
 assert sanitize('5\u00D73') == '5x3', 'non-fraction case regressed'
-print('OK: v0.3.1 fix is active in _vendored/')
+print('OK: v0.3.2 fix is active in _vendored/')
 "
 
 # 4. Run tickertape's own test suite.
@@ -61,15 +63,15 @@ print('OK: v0.3.1 fix is active in _vendored/')
 
 # 5. Commit.
 git add _vendored/receipt_print.py
-git commit -m "chore: re-vendor unspooled v0.3.1 (mixed-number spacing fix)
+git commit -m "chore: re-vendor unspooled v0.3.2 (mixed-number spacing fix)
 
 Bumps the vendored receipt_print.py from v0.3.0 (commit bc19427)
-to v0.3.1 (commit 42db0ba). The only behavioral change is in
+to v0.3.2 (commit 07b74f2). The only behavioral change is in
 sanitize(): mixed-number forms like \"1¼ cups\" now render as
 \"1 1/4 cups\" (correct) instead of \"11/4 cups\" (broken). All
 other byte-equality contracts are preserved.
 
-See https://github.com/bryanwintermute/unspooled/releases/tag/v0.3.1.
+See https://github.com/bryanwintermute/unspooled/releases/tag/v0.3.2.
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 
@@ -112,22 +114,32 @@ has `_RE_DIGIT_FRACTION` near the top of the sanitize section.
 
 ## Out of scope for this re-vendor
 
-- **No changes to `worker.py`.** The v0.3.1 fix is purely upstream.
+- **No changes to `worker.py`.** The v0.3.2 fix is purely upstream.
   `render_markdown()` and `Receipt(...)` automatically pick up the
   improved `sanitize()` behavior because they share the sanitizer.
 - **No new tests in tickertape.** Upstream owns the sanitizer tests
-  (109 of them as of v0.3.1). Tickertape's tests cover its own
+  (109 of them as of v0.3.2). Tickertape's tests cover its own
   worker / queue logic, not the renderer.
 - **No `worker.sanitize_text()`** to re-add. That was correctly
   removed in commit `8854b65`; the upstream fix is the right home
   for sanitization improvements.
+
+## Footnote: why we jumped from v0.3.1 to v0.3.2
+
+The v0.3.1 tag was cut before a Python 3.9 compat fix landed
+upstream (`SanitizeArg = bool | Mapping[...]` was a PEP 604 union
+at module level, which crashes at import on Python 3.9). Tickertape
+runs on Python 3.13 (tickerbox) / 3.11 (Docker / CI) so the fix
+doesn't affect runtime behavior here — but pinning to v0.3.2 keeps
+the vendored copy aligned with what upstream considers "good." See
+upstream commit `e4b1cda` for the technical detail.
 
 ## If anything goes sideways
 
 - **Tests fail after the swap:** diff the new and old vendored files
   (`git diff HEAD _vendored/receipt_print.py`) and look for anything
   beyond the sanitize/regex changes. The only intentional changes
-  between v0.3.0 and v0.3.1 are:
+  between v0.3.0 and v0.3.2 are:
   - `_RE_DIGIT_FRACTION` constant added at the top of sanitize section
   - `sanitize()` calls it as the new step 0 in its pipeline
   - `import re as _re` moved to the top of the file (was later)
