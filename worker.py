@@ -2,26 +2,12 @@ import os
 import time
 import logging
 from db import init_db, get_next_pending_job, mark_job_status, requeue_job, recover_crashed_jobs
-from _vendored.receipt_print import Receipt
+from _vendored.receipt_print import render_markdown
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 POLL_INTERVAL_SEC = 2.0
 PRINTER_DEVICE = os.environ.get("PRINTER_DEVICE", "/dev/rongta-receipt")
-
-def sanitize_text(text: str) -> str:
-    """Replaces common non-CP437 characters with ASCII approximations."""
-    if not text:
-        return text
-    replacements = {
-        '“': '"', '”': '"', "‘": "'", "’": "'",
-        '—': '--', '–': '-', '…': '...',
-        '¼': '1/4', '½': '1/2', '¾': '3/4',
-        '°': ' deg', '©': '(c)', '®': '(r)'
-    }
-    for search, replace in replacements.items():
-        text = text.replace(search, replace)
-    return text
 
 def print_to_device(raw_bytes: bytes, device_path: str):
     with open(device_path, 'wb') as f:
@@ -33,25 +19,26 @@ def process_job(job: dict):
     
     try:
         # Build the receipt
-        title = sanitize_text(payload.get('title'))
-        style = payload.get('style', 'checkbox')
+        title = payload.get('title')
         
-        if job['type'] == 'echo':
-            style = 'plain'
-            
-        receipt = Receipt(title=title, style=style, timestamp=True)
-        
-        items = payload.get('items', [])
         if job['type'] == 'echo':
             text = payload.get('text', '')
-            if text:
-                for line in text.split('\n'):
-                    receipt.add_item(sanitize_text(line))
         else:
+            style = payload.get('style', 'checkbox')
+            items = payload.get('items', [])
+            lines = []
             for item in items:
-                receipt.add_item(sanitize_text(item))
+                if style == 'checkbox':
+                    lines.append(f"- [ ] {item}")
+                elif style == 'bullet':
+                    lines.append(f"- {item}")
+                elif style == 'numbered':
+                    lines.append(f"1. {item}")
+                else:
+                    lines.append(item)
+            text = '\n'.join(lines)
                 
-        raw_bytes = receipt.to_bytes()
+        raw_bytes = render_markdown(text, title=title)
         
         # In a real environment, send to PRINTER_DEVICE
         # For testing if the device doesn't exist, we fall back to logging
