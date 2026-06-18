@@ -1,0 +1,41 @@
+---
+- name: Ensure target directory exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/github"
+    state: directory
+
+- name: Sync tickertape repository to target
+  ansible.posix.synchronize:
+    src: "{{ lookup('env', 'HOME') }}/github/tickertape/"
+    dest: "/home/{{ ansible_user }}/github/tickertape/"
+    delete: yes
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=venv"
+      - "--exclude=*.db"
+      - "--exclude=ansible"
+
+- name: Install systemd units
+  ansible.builtin.copy:
+    src: "{{ lookup('env', 'HOME') }}/github/tickertape/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  loop:
+    - tickertape.service
+    - tickertape-worker.service
+  notify:
+    - reload systemd
+    - restart tickertape services
+
+- name: Enable and start tickertape services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  become: true
+  loop:
+    - tickertape.service
+    - tickertape-worker.service
