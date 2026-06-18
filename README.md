@@ -8,7 +8,8 @@ Tickertape is the user-facing web app and CLI for pushing short, time-ordered me
 Built on top of [`unspooled`](https://github.com/bryanwintermute/unspooled).
 
 <div align="center">
-  <img src="docs/tickertape_mockup.jpg" alt="Tickertape UI Mockup" width="400">
+  <img src="docs/light_mode.png" alt="Tickertape Light Mode" width="300" style="margin-right: 16px;">
+  <img src="docs/dark_mode.png" alt="Tickertape Dark Mode" width="300">
 </div>
 
 ## Features
