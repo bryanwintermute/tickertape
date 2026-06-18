@@ -3,6 +3,7 @@ import socketserver
 import json
 import logging
 import uuid
+import datetime
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from db import init_db, enqueue_job, list_reminders, list_history, mark_job_status
@@ -12,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 PORT = 8000
 WEB_DIR = Path(__file__).parent / "web"
+
+# Captured once at process startup. Because every deploy restarts the
+# service, this doubles as a deploy marker: it stays constant until the
+# next deploy, so a changed value confirms new code is live. (Computing
+# datetime.now() per request instead would change on every page refresh
+# and verify nothing.)
+SERVER_START_TIME = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -46,9 +54,8 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
         try:
             with open(index_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
-            import datetime
-            version_str = f"Server Started: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+            version_str = f"Server Started: {SERVER_START_TIME}"
             content = content.replace("<!-- APP_VERSION -->", version_str)
             
             encoded = content.encode('utf-8')
@@ -148,8 +155,16 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
 def run():
     init_db()
     logger.info("Database initialized.")
-    
-    with socketserver.TCPServer(("", PORT), TickertapeHandler) as httpd:
+
+    # allow_reuse_address sets SO_REUSEADDR so a restart can re-bind the port
+    # immediately instead of failing with "Address already in use" while the
+    # previous socket lingers in TIME_WAIT. Without this, a `systemctl restart`
+    # (e.g. on every ansible deploy) leaves the service down for ~30-60s until
+    # the old socket clears. socketserver.TCPServer defaults this to False.
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+
+    with ReusableTCPServer(("", PORT), TickertapeHandler) as httpd:
         logger.info(f"Serving UI and API at port {PORT}")
         try:
             httpd.serve_forever()
