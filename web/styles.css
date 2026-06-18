@@ -162,6 +162,10 @@ input[type="text"]:focus, textarea:focus {
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
+input[type="checkbox"], input[type="radio"] {
+    accent-color: var(--accent-color);
+}
+
 textarea {
     resize: vertical;
     min-height: 100px;
@@ -191,6 +195,7 @@ textarea {
     padding: 16px;
     border-radius: var(--radius-md);
     font-size: 1.1rem;
+    font-family: inherit;
     font-weight: 600;
     cursor: pointer;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -207,25 +212,43 @@ textarea {
 }
 
 .secondary-btn {
-    width: 100%;
-    padding: 16px;
-    background-color: var(--card-bg);
-    color: var(--text-color);
+    background-color: transparent;
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius);
+    padding: 16px;
+    border-radius: var(--radius-md);
     font-size: 1.1rem;
+    font-family: inherit;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    margin-top: 20px;
+    transition: all var(--transition-fast);
+    margin-top: 8px;
 }
 
 .secondary-btn:hover {
-    background-color: var(--hover-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--text-secondary);
 }
 
 .secondary-btn:active {
     transform: translateY(0);
+}
+
+.template-select {
+    float: right;
+    font-size: 0.8em;
+    font-family: inherit;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.template-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 /* Inbox */
