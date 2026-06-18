@@ -1,4 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Theme Settings ---
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsMenu = document.getElementById('settings-menu');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Toggle menu
+    settingsBtn.addEventListener('click', (e) => {
+        settingsMenu.classList.toggle('show');
+        e.stopPropagation();
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+            settingsMenu.classList.remove('show');
+        }
+    });
+
+    // Theme toggle logic
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        themeToggle.checked = false;
+    }
+
+    themeToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+    });
+
     // --- Pre-fill from URL params (Web Share Target / Shortcuts) ---
     const urlParams = new URLSearchParams(window.location.search);
     const shareText = urlParams.get('text');
