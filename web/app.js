@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (shareText) combined.push(shareText);
         if (shareUrl) combined.push(shareUrl);
         
-        const echoInput = document.getElementById('echo-input');
+        const echoInput = document.getElementById('echo-text');
         if (echoInput) {
             echoInput.value = combined.join('\n\n');
             prefillDone = true;
