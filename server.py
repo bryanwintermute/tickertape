@@ -35,9 +35,32 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_get_inbox()
         elif parsed_path.path == '/api/history':
             self._handle_get_history()
+        elif parsed_path.path == '/' or parsed_path.path == '/index.html':
+            self._serve_index()
         else:
             # Fall back to serving static files from web/
             super().do_GET()
+
+    def _serve_index(self):
+        index_path = WEB_DIR / "index.html"
+        try:
+            with open(index_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            import datetime
+            version_str = f"Server Started: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            content = content.replace("<!-- APP_VERSION -->", version_str)
+            
+            encoded = content.encode('utf-8')
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.end_headers()
+            self.wfile.write(encoded)
+        except Exception as e:
+            logger.error(f"Failed to serve index: {e}")
+            self._send_error(500, "Internal Server Error")
 
     def _handle_print_job(self):
         content_length = int(self.headers.get('Content-Length', 0))

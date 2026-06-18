@@ -38,9 +38,19 @@ body {
 .app-container {
     width: 100%;
     max-width: 480px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-height: 100vh;
+}
+
+.app-version {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #666;
+    padding: 8px 0;
+    font-family: monospace;
 }
 
 header {
