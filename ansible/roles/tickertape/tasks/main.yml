@@ -38,6 +38,8 @@
     dest: "{{ tickertape_dest }}/"
     delete: true
     rsync_opts: "{{ tickertape_rsync_excludes | map('regex_replace', '^', '--exclude=') | list }}"
+  notify:
+    - Restart tickertape services
   # synchronize runs from the controller over the existing SSH connection;
   # files land owned by the connecting user (tickertape_user). No become.
 
