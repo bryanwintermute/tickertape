@@ -1,0 +1,15 @@
+# Managed by Ansible (tickertape/ansible/roles/tickertape). Do not edit by hand.
+[Unit]
+Description=Tickertape Web Service
+After=network.target
+
+[Service]
+Type=simple
+User={{ tickertape_user }}
+WorkingDirectory={{ tickertape_dest }}
+ExecStart={{ tickertape_python }} server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

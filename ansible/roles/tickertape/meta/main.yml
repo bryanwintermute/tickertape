@@ -1,0 +1,30 @@
+---
+galaxy_info:
+  role_name: tickertape
+  namespace: bryanwintermute
+  author: Bryan Wintermute
+  description: >-
+    Deploy the tickertape thermal-receipt web UI + print worker to a
+    Debian/Pi OS host as two systemd services.
+  # The tickertape repo is currently private and carries no LICENSE file.
+  # This role is not published to Ansible Galaxy; consumed via roles_path.
+  license: other
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
+  galaxy_tags:
+    - tickertape
+    - escpos
+    - thermal
+    - printer
+    - systemd
+    - raspberrypi
+
+# Collections this role uses. Consumers should ensure these are installed
+# (e.g. via the consuming project's requirements.yml):
+#   ansible.posix  -> ansible.posix.synchronize
+# ansible.builtin modules need no declaration.
+dependencies: []

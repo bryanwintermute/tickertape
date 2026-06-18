@@ -1,0 +1,65 @@
+---
+# Defaults for the tickertape role.
+#
+# Deploys the tickertape web UI + print worker to a Debian/Pi OS host as two
+# systemd services. Designed to run *after* (or alongside) the printer-host
+# role, which provisions the udev rule + /dev/rongta-receipt symlink +
+# plugdev membership the worker needs to write to the printer.
+#
+# Deploy model: the role pushes the working copy of the tickertape repo it
+# *lives in* (located via role_path) to the target with rsync, then renders
+# parameterized systemd units. This deliberately avoids giving the target any
+# GitHub credentials — the tickertape repo is private, so a target-side
+# `git clone` would need a deploy key / token. rsync-from-controller sidesteps
+# that and works for anyone who has the repo checked out. To deploy a clean
+# committed checkout instead of your working tree, commit + push first, or
+# point tickertape_src_dir at a fresh clone.
+
+# --- who / where -------------------------------------------------------------
+
+tickertape_user: "{{ ansible_user_id }}"
+tickertape_home: "/home/{{ tickertape_user }}"
+tickertape_dest: "{{ tickertape_home }}/github/tickertape"
+
+# Source: the tickertape repo root, discovered relative to this role's own
+# location. The role lives at <repo>/ansible/roles/tickertape, so three levels
+# up is the repo root. Override to deploy from a different checkout.
+tickertape_src_dir: "{{ (role_path ~ '/../../..') | realpath }}"
+
+# --- runtime -----------------------------------------------------------------
+
+# Python interpreter that runs server.py / worker.py. tickertape is
+# stdlib-only (no pip dependencies), so the system python3 is sufficient.
+tickertape_python: "/usr/bin/python3"
+
+# Character device the worker writes ESC/POS bytes to. Matches the symlink
+# created by the printer-host role's udev rule.
+tickertape_printer_device: "/dev/rongta-receipt"
+
+# --- packages ----------------------------------------------------------------
+
+# rsync is required on the target for ansible.posix.synchronize; python3 runs
+# the services. Both are usually already present on Pi OS / Debian.
+tickertape_apt_packages:
+  - python3
+  - rsync
+
+# --- service management ------------------------------------------------------
+
+# Set false to deploy the code + units without enabling/starting (e.g. for a
+# host you want to bring up manually, or a dry provisioning run).
+tickertape_manage_services: true
+
+# rsync excludes. `*.db` keeps the live SQLite queue on the target from being
+# clobbered by a stale local copy — excluded patterns are protected from
+# `--delete` too (learned the hard way; see
+# myconfigs/copilot/lessons/rsync-sqlite-deployment-footgun.md). The rest keep
+# the payload lean and exclude the ansible role itself.
+tickertape_rsync_excludes:
+  - ".git"
+  - "venv"
+  - ".venv"
+  - "*.db"
+  - "*.db-journal"
+  - "ansible"
+  - "__pycache__"

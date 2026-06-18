@@ -1,0 +1,17 @@
+# Managed by Ansible (tickertape/ansible/roles/tickertape). Do not edit by hand.
+[Unit]
+Description=Tickertape Print Worker
+After=network.target tickertape.service
+
+[Service]
+Type=simple
+User={{ tickertape_user }}
+WorkingDirectory={{ tickertape_dest }}
+ExecStart={{ tickertape_python }} worker.py
+Restart=on-failure
+RestartSec=5
+# Character device the worker writes ESC/POS bytes to (printer-host udev symlink).
+Environment="PRINTER_DEVICE={{ tickertape_printer_device }}"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,41 +1,68 @@
 ---
-- name: Ensure target directory exists
+# tickertape: deploy the web UI + print worker as systemd services.
+#
+# Runs after printer-host (which provides /dev/rongta-receipt + plugdev).
+# Pushes the repo working copy to the target via rsync, renders parameterized
+# units, then enables/starts the services.
+
+- name: Sanity checks
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'Debian'
+      - tickertape_user | length > 0
+      - tickertape_src_dir | length > 0
+    fail_msg: >-
+      tickertape requires a Debian-family target and a resolvable
+      tickertape_user / tickertape_src_dir.
+
+- name: Install apt packages
+  ansible.builtin.apt:
+    name: "{{ tickertape_apt_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Ensure the deploy parent directory exists
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/github"
+    path: "{{ tickertape_dest | dirname }}"
     state: directory
+    owner: "{{ tickertape_user }}"
+    group: "{{ tickertape_user }}"
+    mode: "0755"
+  become: true
 
-- name: Sync tickertape repository to target
+- name: Sync the tickertape repo to the target
   ansible.posix.synchronize:
-    src: "{{ lookup('env', 'HOME') }}/github/tickertape/"
-    dest: "/home/{{ ansible_user }}/github/tickertape/"
-    delete: yes
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=venv"
-      - "--exclude=*.db"
-      - "--exclude=ansible"
+    src: "{{ tickertape_src_dir }}/"
+    dest: "{{ tickertape_dest }}/"
+    delete: true
+    rsync_opts: "{{ tickertape_rsync_excludes | map('regex_replace', '^', '--exclude=') | list }}"
+  # synchronize runs from the controller over the existing SSH connection;
+  # files land owned by the connecting user (tickertape_user). No become.
 
-- name: Install systemd units
-  ansible.builtin.copy:
-    src: "{{ lookup('env', 'HOME') }}/github/tickertape/{{ item }}"
+- name: Render systemd unit files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
     dest: "/etc/systemd/system/{{ item }}"
     owner: root
     group: root
-    mode: '0644'
-  become: true
+    mode: "0644"
   loop:
     - tickertape.service
     - tickertape-worker.service
+  become: true
   notify:
-    - reload systemd
-    - restart tickertape services
+    - Reload systemd
+    - Restart tickertape services
 
 - name: Enable and start tickertape services
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: true
     state: started
-  become: true
   loop:
     - tickertape.service
     - tickertape-worker.service
+  become: true
+  when: tickertape_manage_services
