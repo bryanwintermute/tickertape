@@ -25,6 +25,21 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_DIR), **kwargs)
 
+    def end_headers(self):
+        # Force every response (app.js, styles.css, fonts, manifest, API JSON,
+        # the HTML) to be revalidated before reuse. SimpleHTTPRequestHandler
+        # otherwise sets only Last-Modified, which lets browsers *heuristically*
+        # cache static files and serve stale JS/CSS for hours/days without even
+        # contacting the server. That's especially painful for an installed PWA
+        # (there's no service worker here, just HTTP cache), where there's no
+        # easy hard reload — the only escape becomes "clear browsing data."
+        #
+        # "no-cache" = the browser MAY store the file but MUST revalidate every
+        # time (cheap 304 when unchanged, fresh 200 right after a deploy). This
+        # is what keeps deploys visible without a service worker.
+        self.send_header("Cache-Control", "no-cache, must-revalidate")
+        super().end_headers()
+
     def do_POST(self):
         parsed_path = urlparse(self.path)
         
@@ -62,7 +77,6 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.send_header("Content-Length", str(len(encoded)))
-            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
             self.wfile.write(encoded)
         except Exception as e:
