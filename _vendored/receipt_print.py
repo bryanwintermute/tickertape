@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Vendored from https://github.com/bryanwintermute/unspooled
-# at v0.3.1 (commit 42db0ba). DO NOT EDIT locally; refresh by
+# at v0.3.2 (commit e4b1cda). DO NOT EDIT locally; refresh by
 # re-vendoring from upstream.
 """Stdlib-only ESC/POS renderer for 80mm and 58mm thermal receipt printers.
 
@@ -57,7 +57,7 @@ import textwrap
 import time
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, Mapping
+from typing import Callable, Iterable, Mapping, Union
 
 # Generic kernel-bound usblp char device. The Rongta-specific symlink
 # `/dev/rongta-receipt` (from the bundled udev rule) is equivalent on
@@ -202,7 +202,13 @@ def sanitize(
 
 
 # Type alias for the `sanitize=` constructor argument.
-SanitizeArg = bool | Mapping[str, str] | Callable[[str], str]
+# NOTE: this is a *module-level* type alias, which is evaluated at
+# import time even with `from __future__ import annotations`. The
+# PEP 604 `X | Y` syntax for unions wasn't legal at runtime until
+# Python 3.10, so we use `typing.Union` here to preserve the README's
+# claim of Python 3.9+ support. (Annotations inside function/class
+# defs can still use `|` thanks to the __future__ import.)
+SanitizeArg = Union[bool, Mapping[str, str], Callable[[str], str]]
 
 
 def _resolve_sanitizer(arg: SanitizeArg) -> Callable[[str], str] | None:
