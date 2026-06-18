@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (err) {
             console.error(err);
-            inboxList.innerHTML = '<p class="empty-state" style="color: var(--error-color)">Failed to load inbox.</p>';
+            inboxList.innerHTML = '<p class="empty-state error">Failed to load inbox.</p>';
         }
     }
 
@@ -381,28 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
             historyList.innerHTML = '';
             data.history.forEach(job => {
                 const div = document.createElement('div');
-                div.className = 'inbox-item';
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-                div.style.alignItems = 'center';
+                div.className = 'inbox-item history-item';
                 
                 const title = job.payload.title || (job.type === 'echo' ? 'Quick Note' : 'Untitled List');
                 const date = new Date(job.created_at).toLocaleString();
-                const statusTag = job.status !== 'printed' ? `<span style="color:var(--error-color);font-size:0.8em">(${job.status})</span>` : '';
+                const statusTag = job.status !== 'printed' ? `<span class="status-error">(${job.status})</span>` : '';
                 
                 const infoDiv = document.createElement('div');
                 infoDiv.innerHTML = `
-                    <div class="inbox-item-title">${title} <span style="font-weight:normal; font-size: 0.8em; opacity: 0.7;">(${job.type})</span> ${statusTag}</div>
+                    <div class="inbox-item-title">${title} <span class="job-type-tag">(${job.type})</span> ${statusTag}</div>
                     <div class="inbox-item-meta">${date}</div>
                 `;
                 
                 const btnDiv = document.createElement('div');
                 const reprintBtn = document.createElement('button');
                 reprintBtn.textContent = 'Reprint';
-                reprintBtn.className = 'primary-btn';
-                reprintBtn.style.padding = '8px 16px';
-                reprintBtn.style.fontSize = '0.9rem';
-                reprintBtn.style.marginTop = '0';
+                reprintBtn.className = 'primary-btn reprint-btn';
                 reprintBtn.onclick = async () => {
                     const ogText = reprintBtn.textContent;
                     reprintBtn.textContent = '...';
@@ -423,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (err) {
             console.error(err);
-            historyList.innerHTML = '<p class="empty-state" style="color: var(--error-color)">Failed to load history.</p>';
+            historyList.innerHTML = '<p class="empty-state error">Failed to load history.</p>';
         }
     }
 

@@ -226,7 +226,17 @@ textarea {
     font-weight: 600;
     cursor: pointer;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
     margin-top: 8px;
+}
+
+.button-group button {
+    flex: 1;
+    margin-top: 0;
 }
 
 .primary-btn:hover {
@@ -249,7 +259,6 @@ textarea {
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
-    margin-top: 8px;
 }
 
 .secondary-btn:hover {
@@ -329,6 +338,29 @@ textarea {
 .inbox-item-meta {
     font-size: 0.8rem;
     color: var(--text-secondary);
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reprint-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    margin-top: 0;
+}
+
+.status-error {
+    color: var(--error-color);
+    font-size: 0.8em;
+}
+
+.job-type-tag {
+    font-weight: normal;
+    font-size: 0.8em;
+    opacity: 0.7;
 }
 
 .empty-state {

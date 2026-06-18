@@ -1,8 +1,22 @@
-# tickertape
+<div align="center">
+  <img src="web/icon.svg" alt="Tickertape Logo" width="128">
+  <h1>tickertape</h1>
+</div>
 
 Tickertape is the user-facing web app and CLI for pushing short, time-ordered messages (to-dos, shopping lists, reminders) to a home-network thermal receipt printer.
 
 Built on top of [`unspooled`](https://github.com/bryanwintermute/unspooled).
+
+<div align="center">
+  <img src="docs/tickertape_mockup.jpg" alt="Tickertape UI Mockup" width="400">
+</div>
+
+## Features
+
+- **PWA Support:** Install Tickertape to your Android or iOS home screen. On Android, it registers as a "Share Target," so you can instantly share URLs or text directly from other apps straight to your printer queue! See [Android Share Setup](docs/ANDROID_SHARE.md) and [iOS Shortcuts Setup](docs/IOS_SHORTCUTS.md).
+- **Light/Dark Mode:** Sleek UI that defaults to your OS setting, with a manual override in the settings menu.
+- **Idempotent Queueing:** Jobs are queued via an SQLite database so they aren't lost if the printer is unplugged.
+- **Reminders:** Send items to the "Inbox" and batch print them later when you're ready.
 
 ## Architecture
 - **Server (`server.py`)**: Serves the mobile-friendly web UI and a simple `/api/print` endpoint.
@@ -79,9 +93,19 @@ Example `.service` files for Raspberry Pi deployments are included:
 2. `sudo systemctl daemon-reload`
 3. `sudo systemctl enable --now tickertape.service tickertape-worker.service`
 
-**Deploying to a Dedicated Host (Quick Path):**
+### Deployment (Ansible)
+
+For robust deployment, this repository includes an Ansible role.
+
+1. Configure your inventory to point to your target host (e.g. `tickerbox`).
+2. Run the deployment playbook:
+   ```bash
+   ansible-playbook -i inventory.local.yml site.yml --tags tickertape --limit tickerbox -K
+   ```
+
+If you wish to deploy manually:
 1. Ensure the remote host has the proper printer setup (udev rules).
-2. Sync the repository over (e.g., `rsync -avz --exclude '.git' ~/github/tickertape user@host:~/github/`).
-3. SSH into the host and run the `cp`, `daemon-reload`, and `enable --now` steps above.
+2. Sync the repository over (`rsync -avz --exclude '.git' ~/github/tickertape user@host:~/github/`).
+3. SSH into the host and run the `cp`, `daemon-reload`, and `enable --now` steps for the `.service` files provided.
 
 ### License
