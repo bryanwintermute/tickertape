@@ -1,4 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Pre-fill from URL params (Web Share Target / Shortcuts) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareText = urlParams.get('text');
+    const shareTitle = urlParams.get('title');
+    const shareUrl = urlParams.get('url');
+    
+    let prefillDone = false;
+    if (shareText || shareTitle || shareUrl) {
+        let combined = [];
+        if (shareTitle) combined.push(`# ${shareTitle}`);
+        if (shareText) combined.push(shareText);
+        if (shareUrl) combined.push(shareUrl);
+        
+        const echoInput = document.getElementById('echo-input');
+        if (echoInput) {
+            echoInput.value = combined.join('\n\n');
+            prefillDone = true;
+        }
+        
+        // Clean up URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // --- Tab Switching ---
     const tabs = document.querySelectorAll('.tab-btn');
     const panels = document.querySelectorAll('.panel');
@@ -19,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    if (prefillDone) {
+        const markdownTab = document.querySelector('[data-tab="echo"]');
+        if (markdownTab) markdownTab.click();
+    }
 
     // --- Toast Notification ---
     function showToast(message, isError = false) {
