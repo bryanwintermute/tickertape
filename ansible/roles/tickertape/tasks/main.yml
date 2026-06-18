@@ -3,7 +3,7 @@
 #
 # Runs after printer-host (which provides /dev/rongta-receipt + plugdev).
 # Pushes the repo working copy to the target via rsync, renders parameterized
-# units, then enables/starts the services.
+# units, then restarts the services so the freshly-synced code goes live.
 
 - name: Sanity checks
   ansible.builtin.assert:
@@ -38,8 +38,6 @@
     dest: "{{ tickertape_dest }}/"
     delete: true
     rsync_opts: "{{ tickertape_rsync_excludes | map('regex_replace', '^', '--exclude=') | list }}"
-  notify:
-    - Restart tickertape services
   # synchronize runs from the controller over the existing SSH connection;
   # files land owned by the connecting user (tickertape_user). No become.
 
@@ -54,15 +52,25 @@
     - tickertape.service
     - tickertape-worker.service
   become: true
-  notify:
-    - Reload systemd
-    - Restart tickertape services
+  notify: Reload systemd
 
-- name: Enable and start tickertape services
+# Apply any unit-file change now (daemon-reload) so the restart below picks
+# up the new unit, not the old one. Handlers otherwise run at end-of-play.
+- name: Flush handlers (apply pending daemon-reload before restart)
+  ansible.builtin.meta: flush_handlers
+
+# Restart on EVERY deploy (not just when files change). server.py / worker.py
+# are long-running Python processes that do NOT hot-reload, so a deploy that
+# only syncs code would otherwise leave the *old* process serving stale code
+# with no signal that a restart is needed. An unconditional restart is the
+# reliable "make the deployed code live" step for a single-service homelab
+# app; the worker persists its queue in SQLite and recovers on start, so the
+# ~2s blip is harmless. Set tickertape_manage_services=false to skip.
+- name: Enable and restart tickertape services
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: true
-    state: started
+    state: restarted
   loop:
     - tickertape.service
     - tickertape-worker.service

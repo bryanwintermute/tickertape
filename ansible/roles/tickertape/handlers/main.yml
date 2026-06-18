@@ -3,13 +3,3 @@
   ansible.builtin.systemd:
     daemon_reload: true
   become: true
-
-- name: Restart tickertape services
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: restarted
-  loop:
-    - tickertape.service
-    - tickertape-worker.service
-  become: true
-  when: tickertape_manage_services

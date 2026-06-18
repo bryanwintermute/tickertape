@@ -16,7 +16,17 @@ See [Consuming this role](#consuming-this-role).
 | Installs `python3`, `rsync` (apt) | tickertape is stdlib-only; no pip step. |
 | rsyncs the repo working copy to `{{ tickertape_dest }}` | Excludes `.git`, `venv`, `*.db`, `ansible`, `__pycache__`. |
 | Renders `tickertape.service` + `tickertape-worker.service` | Parameterized units (user, paths, python, printer device). |
-| Enables + starts both services | Toggle with `tickertape_manage_services`. |
+| Enables + **restarts** both services on every deploy | Toggle with `tickertape_manage_services`. |
+
+> **Why restart on every deploy?** `server.py` / `worker.py` are
+> long-running Python processes that do **not** hot-reload. A deploy that
+> only syncs code (no unit-file change) would otherwise leave the *old*
+> process serving stale code — and because the file on disk is already
+> current, a re-run has no "changed" signal to trigger a restart, so you'd
+> deploy forever and never see your change. The role therefore restarts
+> unconditionally: a deploy means "make the synced code live." The worker
+> persists its queue in SQLite and recovers on start, so the ~2s blip is
+> harmless. Set `tickertape_manage_services: false` to deploy code only.
 
 ## Deploy model — and why it's rsync, not git clone
 
