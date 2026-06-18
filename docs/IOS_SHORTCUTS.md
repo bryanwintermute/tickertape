@@ -26,3 +26,7 @@ If you want to print content instantly *without* opening the UI first, you can c
 6. Save the shortcut as "Print to Tickertape".
 
 Now, whenever you share text to this Shortcut, it will fire an API request in the background and instantly print the receipt!
+
+## See also
+
+- [`ANDROID_SHARE.md`](./ANDROID_SHARE.md) — the Android equivalents, including why the share sheet works from Chrome but not Firefox.
