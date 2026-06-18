@@ -96,13 +96,16 @@ Example `.service` files for Raspberry Pi deployments are included:
 
 ### Deployment (Ansible)
 
-For robust deployment, this repository includes an Ansible role.
+For robust deployment, this repository includes an Ansible role at
+[`ansible/roles/tickertape/`](ansible/roles/tickertape/README.md). It's
+designed to be consumed from your own playbook repo via `roles_path`
+(see the role's README for setup); it rsyncs the app to the target,
+templates the systemd units, and restarts the services.
 
-1. Configure your inventory to point to your target host (e.g. `tickerbox`).
-2. Run the deployment playbook:
-   ```bash
-   ansible-playbook -i inventory.local.yml site.yml --tags tickertape --limit tickerbox -K
-   ```
+```bash
+# From your playbook repo, once the role is on your roles_path:
+ansible-playbook -i inventory.yml your-playbook.yml --tags tickertape --limit your-host -K
+```
 
 If you wish to deploy manually:
 1. Ensure the remote host has the proper printer setup (udev rules).
@@ -110,3 +113,4 @@ If you wish to deploy manually:
 3. SSH into the host and run the `cp`, `daemon-reload`, and `enable --now` steps for the `.service` files provided.
 
 ### License
+Licensed under the [Apache License 2.0](LICENSE).

@@ -19,7 +19,7 @@ If you want to print content instantly *without* opening the UI first, you can c
    - Key: `type` (Text), Value: `echo`
    - Key: `text` (Text), Value: `Shortcut Input` (Select the input from the share sheet)
 5. Add a **Get contents of URL** action:
-   - URL: `http://10.20.0.139:8000/api/print` (replace with your Wireguard/LAN IP if necessary)
+   - URL: `http://<printer-host>:8000/api/print` (replace with your Wireguard/LAN IP if necessary)
    - Method: `POST`
    - Headers: `Content-Type` : `application/json`
    - Request Body: `File` -> Select the Dictionary variable from step 4.

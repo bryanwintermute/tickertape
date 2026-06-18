@@ -58,7 +58,7 @@ UI. Two good apps: **HTTP Shortcuts** (free, open-source) or **Tasker**.
    - **Method:** `POST`
    - **URL:** `http://<tickertape-host>:8000/api/print`
      (your LAN IP/hostname, or the Wireguard-reachable address, e.g.
-     `http://tickerbox:8000/api/print`).
+     `http://<your-host>:8000/api/print`).
    - **Request body / Content type:** `application/json`
    - **Body:**
      ```json
