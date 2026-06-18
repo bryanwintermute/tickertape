@@ -49,6 +49,27 @@ If you prefer to run it manually with Python 3.11+:
 ### Configuration
 You can configure the path to the printer by setting the `PRINTER_DEVICE` environment variable. It defaults to `/dev/rongta-receipt`. When running in Docker, ensure you map the printer device (e.g. `/dev/usb/lp0`) correctly in the compose file under the `devices:` block.
 
+### Running the tests
+
+The test suite is plain `pytest` and lives in `tests/`. The tests
+import the app's modules directly (e.g. `import db`), so they must be
+run from the **repo root with `PYTHONPATH=.`** — exactly as CI does
+(`.github/workflows/docker-publish.yml`).
+
+On Debian / Raspberry Pi OS, `pip install pytest` fails on the system
+Python (PEP 668, externally-managed). Use a project-local venv:
+
+```bash
+cd ~/github/tickertape
+python3 -m venv .venv            # one-time; needs `sudo apt install python3-venv` if it errors
+.venv/bin/pip install -q pytest  # one-time
+PYTHONPATH=. .venv/bin/python -m pytest tests/   # run the tests
+```
+
+`.venv/` is gitignored. If you can't get any test runner working,
+**say so and stop — do not commit changes claiming "tests pass"
+without having run them.**
+
 ### Systemd Deployment
 Example `.service` files for Raspberry Pi deployments are included:
 - `tickertape.service`
