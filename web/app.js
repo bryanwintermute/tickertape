@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle menu
     settingsBtn.addEventListener('click', (e) => {
-        settingsMenu.classList.toggle('show');
+        const isShowing = settingsMenu.classList.toggle('show');
+        settingsBtn.setAttribute('aria-expanded', isShowing);
         e.stopPropagation();
     });
 
@@ -14,14 +15,31 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
             settingsMenu.classList.remove('show');
+            settingsBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Close menu on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            settingsMenu.classList.remove('show');
+            settingsBtn.setAttribute('aria-expanded', 'false');
         }
     });
 
     // Theme toggle logic
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'light') {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    
+    // Determine effective theme
+    const isLightMode = savedTheme === 'light' || (!savedTheme && prefersLight);
+    
+    if (isLightMode) {
         document.documentElement.setAttribute('data-theme', 'light');
         themeToggle.checked = false;
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeToggle.checked = true;
     }
 
     themeToggle.addEventListener('change', (e) => {

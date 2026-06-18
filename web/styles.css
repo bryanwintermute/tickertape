@@ -74,8 +74,15 @@ body {
 }
 
 header {
+    position: relative;
     text-align: center;
     padding: 24px 0;
+}
+
+#settings-btn {
+    position: absolute;
+    right: 0;
+    top: 12px;
 }
 
 header h1 {
