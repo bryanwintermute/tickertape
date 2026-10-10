@@ -361,7 +361,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('refresh-inbox').addEventListener('click', loadInbox);
-    
+
+    // --- Edit-from-history: load a job's data back into the editor ---
+    function loadJobIntoEditor(job) {
+        const payload = job.payload || {};
+        const isList = Array.isArray(payload.items) || job.type === 'list';
+
+        if (isList) {
+            const form = document.getElementById('list-form');
+            form.reset();
+            document.getElementById('list-title').value = payload.title || '';
+            const style = payload.style || 'checkbox';
+            const radio = document.querySelector(`input[name="list-style"][value="${style}"]`);
+            if (radio) radio.checked = true;
+            document.getElementById('list-items').value = (payload.items || []).join('\n');
+            document.getElementById('list-save').checked = payload.save_to_history !== false;
+            document.querySelector('.tab-btn[data-tab="list"]').click();
+        } else {
+            const form = document.getElementById('echo-form');
+            form.reset();
+            document.getElementById('echo-title').value = payload.title || '';
+            document.getElementById('echo-text').value = payload.text || '';
+            document.getElementById('echo-save').checked = payload.save_to_history !== false;
+            document.querySelector('.tab-btn[data-tab="echo"]').click();
+        }
+
+        showToast('Loaded from history — tweak and reprint');
+    }
+
+    async function deleteHistoryItem(job) {
+        const ok = confirm(`Delete this item from history?\n"${job.payload.title || '(untitled)'}"? This cannot be undone.`);
+        if (!ok) return false;
+        const res = await fetch('/api/history_item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: job.id })
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error || `Failed (${res.status})`);
+        }
+        showToast('Deleted from history');
+        return true;
+    }
+
+    async function clearAllHistory() {
+        const ok = confirm('Clear all history? This removes every printed/failed item. Saved reminders in your Inbox are not affected. Cannot be undone.');
+        if (!ok) return false;
+        const res = await fetch('/api/history/clear', { method: 'POST' });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error || `Failed (${res.status})`);
+        }
+        const data = await res.json().catch(() => ({}));
+        showToast(`Cleared ${data.count ?? 0} item${(data.count ?? 0) === 1 ? '' : 's'}`);
+        return true;
+    }
+
+    document.getElementById('clear-history-btn')?.addEventListener('click', async () => {
+        const clearAllBtn = document.getElementById('clear-history-btn');
+        try {
+            clearAllBtn.disabled = true;
+            const done = await clearAllHistory();
+            if (done) {
+                loadHistory();
+            }
+        } catch (err) {
+            console.error(err);
+            showToast(err.message, true);
+        } finally {
+            clearAllBtn.disabled = false;
+        }
+    });
+
     // --- History Logic ---
     async function loadHistory() {
         const historyList = document.getElementById('history-list');
@@ -394,6 +466,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 
                 const btnDiv = document.createElement('div');
+                btnDiv.className = 'action-btns';
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'secondary-btn reprint-btn';
+                editBtn.onclick = () => {
+                    loadJobIntoEditor(job);
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'danger-btn reprint-btn';
+                deleteBtn.onclick = async () => {
+                    const ogText = deleteBtn.textContent;
+                    deleteBtn.textContent = '...';
+                    deleteBtn.disabled = true;
+                    try {
+                        const done = await deleteHistoryItem(job);
+                        if (done) loadHistory();
+                    } catch (err) {
+                        console.error(err);
+                        showToast(err.message, true);
+                    } finally {
+                        deleteBtn.textContent = ogText;
+                        deleteBtn.disabled = false;
+                    }
+                };
+
                 const reprintBtn = document.createElement('button');
                 reprintBtn.textContent = 'Reprint';
                 reprintBtn.className = 'primary-btn reprint-btn';
@@ -408,7 +507,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     reprintBtn.disabled = false;
                     loadHistory();
                 };
-                
+
+                btnDiv.appendChild(editBtn);
+                btnDiv.appendChild(deleteBtn);
                 btnDiv.appendChild(reprintBtn);
                 div.appendChild(infoDiv);
                 div.appendChild(btnDiv);

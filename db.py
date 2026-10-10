@@ -154,3 +154,19 @@ def list_history() -> List[Dict[str, Any]]:
                 "created_at": row["created_at"]
             })
         return history
+
+def delete_job(job_id: int) -> bool:
+    """Deletes a single job by ID. Returns True if a row was removed."""
+    with get_connection() as conn:
+        cursor = conn.execute("DELETE FROM queue WHERE id = ?", (job_id,))
+        conn.commit()
+        return cursor.rowcount == 1
+
+def clear_history() -> int:
+    """Removes all jobs in a terminal history status. Returns the number of rows removed."""
+    with get_connection() as conn:
+        cursor = conn.execute(
+            "DELETE FROM queue WHERE status IN ('printed', 'failed', 'failed_retriable')"
+        )
+        conn.commit()
+        return cursor.rowcount

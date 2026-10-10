@@ -6,7 +6,7 @@ import uuid
 import datetime
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-from db import init_db, enqueue_job, list_reminders, list_history, mark_job_status
+from db import init_db, enqueue_job, list_reminders, list_history, mark_job_status, delete_job, clear_history
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,11 +42,15 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed_path = urlparse(self.path)
-        
+
         if parsed_path.path == '/api/print':
             self._handle_print_job()
         elif parsed_path.path == '/api/release_reminder':
             self._handle_release_reminder()
+        elif parsed_path.path == '/api/history_item':
+            self._handle_delete_history_item()
+        elif parsed_path.path == '/api/history/clear':
+            self._handle_clear_history()
         else:
             self.send_response(404)
             self.end_headers()
@@ -136,6 +140,43 @@ class TickertapeHandler(http.server.SimpleHTTPRequestHandler):
             self._send_error(400, "Invalid JSON")
         except Exception as e:
             logger.error(f"Failed to release reminder: {e}")
+            self._send_error(500, "Internal Server Error")
+
+    def _handle_delete_history_item(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length)
+
+        try:
+            payload = json.loads(post_data.decode('utf-8'))
+            job_id = payload.get('id')
+            if not job_id:
+                self._send_error(400, "Missing job id")
+                return
+        except json.JSONDecodeError:
+            self._send_error(400, "Invalid JSON")
+            return
+
+        try:
+            if delete_job(job_id):
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "deleted", "id": job_id}).encode())
+            else:
+                self._send_error(404, "Job not found")
+        except Exception as e:
+            logger.error(f"Failed to delete history item: {e}")
+            self._send_error(500, "Internal Server Error")
+
+    def _handle_clear_history(self):
+        try:
+            count = clear_history()
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "cleared", "count": count}).encode())
+        except Exception as e:
+            logger.error(f"Failed to clear history: {e}")
             self._send_error(500, "Internal Server Error")
 
     def _handle_get_inbox(self):
